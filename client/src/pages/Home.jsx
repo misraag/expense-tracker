@@ -1,25 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { Link } from "react-router-dom";
 
 function Home() {
-    let [message, setMessage] = useState("")
-
-    useEffect(()=> {
-        axios.get("http://localhost:5000/")
-        .then((res)=>{
-            console.log(res.data)
-             setMessage(res.data)
-            })
-        .catch((err)=> console.log(err))
-    },[])
-
-
-    return (
-        <div className='text-center'>
-            <h1 className='display-4'>Welcome to Expense Tracker</h1>
-            <p className='lead mt-3'>Backend says: {message}</p>
-        </div>
-    );
+  return (
+    <div className="container text-center mt-5">
+      <h1>Welcome to Expense Tracker</h1>
+      <p className="lead">Track your daily expenses easily.</p>
+      <div className="mt-4">
+        <Link to="/register" className="btn btn-primary mx-2">Register</Link>
+        <Link to="/login" className="btn btn-success mx-2">Login</Link>
+      </div>
+    </div>
+  );
 }
 
 export default Home;

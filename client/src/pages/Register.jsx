@@ -17,7 +17,7 @@ function Register() {
         e.preventDefault();
 
         try{
-            const res = await axios.post("/auth/register", form)
+            const res = await axios.post("http://localhost:5000/api/auth/register", form)
             setMsg(res.data.msg)
             navigate("/login")
         }catch(err) {

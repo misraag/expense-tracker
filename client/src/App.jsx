@@ -9,17 +9,19 @@ import Login from './pages/Login'
 import Expenses from './pages/Expenses'
 
 function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(
+    JSON.parse(localStorage.getItem("user")) || null
+  );
 
   return (
     <>
       {/* <BackendTest/> */}
-      <Navbar user={user}/>
+      <Navbar user={user} setUser={setUser}/>
       <Routes>
         <Route path='/' element={<Home/>}/>
         <Route path='/register' element={<Register/>}/>
         <Route path='/login' element={<Login setUser={setUser}/>}/>
-        <Route path='/expenses' element={<Expenses/>}/>
+        <Route path='/expenses' element={<Expenses user={user}/>}/>
 
       </Routes>
     </>
