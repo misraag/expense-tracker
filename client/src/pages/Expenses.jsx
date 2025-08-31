@@ -1,10 +1,27 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
 
 function Expenses() {
   let [expenses, setExpenses] = useState([]);
-  let [editingId, setEditingId] = useState(null); // track which expense is being edited
-  let [formData, setFormData] = useState({ category: "", description: "", amount: "" });
+  let [editingId, setEditingId] = useState(null);
+  let [formData, setFormData] = useState({
+    category: "",
+    description: "",
+    amount: "",
+  });
 
   useEffect(() => {
     fetchExpenses();
@@ -22,7 +39,6 @@ function Expenses() {
 
   const handleDelete = (id) => {
     const token = localStorage.getItem("token");
-
     axios
       .delete(`http://localhost:5000/api/expenses/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -44,7 +60,6 @@ function Expenses() {
 
   const handleUpdate = (id) => {
     const token = localStorage.getItem("token");
-
     axios
       .put(
         `http://localhost:5000/api/expenses/${id}`,
@@ -52,9 +67,7 @@ function Expenses() {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((res) => {
-        setExpenses(
-          expenses.map((exp) => (exp._id === id ? res.data : exp))
-        );
+        setExpenses(expenses.map((exp) => (exp._id === id ? res.data : exp)));
         setEditingId(null);
       })
       .catch((err) => console.log(err.response?.data || err.message));
@@ -71,10 +84,28 @@ function Expenses() {
     return acc;
   }, {});
 
+  // prepare data for PieChart (category wise total)
+  const categoryData = Object.values(
+    expenses.reduce((acc, exp) => {
+      if (!acc[exp.category]) acc[exp.category] = { name: exp.category, value: 0 };
+      acc[exp.category].value += exp.amount;
+      return acc;
+    }, {})
+  );
+
+  // prepare data for BarChart (date wise total)
+  const dateData = Object.keys(groupedExpenses).map((date) => ({
+    date,
+    total: groupedExpenses[date].reduce((sum, exp) => sum + exp.amount, 0),
+  }));
+
+  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#9b59b6"];
+
   return (
     <div className="container mt-4">
       <h2>Your Expenses</h2>
 
+      {/* Expenses List */}
       {Object.keys(groupedExpenses).length > 0 ? (
         Object.keys(groupedExpenses).map((date) => (
           <div key={date} className="mb-4">
@@ -86,7 +117,6 @@ function Expenses() {
                   className="list-group-item d-flex justify-content-between align-items-center"
                 >
                   {editingId === exp._id ? (
-                    // Edit Mode
                     <div className="w-100">
                       <input
                         type="text"
@@ -129,7 +159,6 @@ function Expenses() {
                       </button>
                     </div>
                   ) : (
-                    // Normal Display
                     <>
                       <div>
                         <strong>{exp.category}</strong>: {exp.description}
@@ -165,9 +194,57 @@ function Expenses() {
         <p>No expense added</p>
       )}
 
+      {/* Total */}
       {expenses.length > 0 && (
         <div className="alert alert-primary mt-3 text-end">
           <strong>Total: ₹{total}</strong>
+        </div>
+      )}
+
+      {/* Charts Section */}
+      {expenses.length > 0 && (
+        <div className="mt-5">
+          <h4 className="text-center mb-3">Expense Insights</h4>
+          <div className="row">
+            {/* Pie Chart */}
+            <div className="col-md-6">
+              <h6 className="text-center">Category-wise Distribution</h6>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label
+                  >
+                    {categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Bar Chart */}
+            <div className="col-md-6">
+              <h6 className="text-center">Date-wise Spending</h6>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={dateData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="total" fill="#82ca9d" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
       )}
     </div>
