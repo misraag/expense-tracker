@@ -40,5 +40,19 @@ router.delete('/:id', authMiddleware, async(req, res)=> {
     }
 })
 
+router.put("/:id", async(req,res)=> {
+    try{
+        const {category, description, amount} = req.body
+        const expense = await Expense.findByIdAndUpdate(
+            req.params.id,
+            {category, description, amount},
+            {new: true}
+        )
+        res.json(expense)
+    }catch(err) {
+        res.status(500).json({msg: "Server error"})
+    }
+})
+
 
 export default router;

@@ -1,6 +1,11 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 
-function Home() {
+function Home({user}) {
+
+  if (user) {
+    return <Navigate to="/expenses" replace />;
+  }
+
   return (
     <div className="container text-center mt-5">
       <h1>Welcome to Expense Tracker</h1>

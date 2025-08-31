@@ -7,6 +7,7 @@ import { useState } from 'react'
 import Register from './pages/Register'
 import Login from './pages/Login'
 import Expenses from './pages/Expenses'
+import AddExpense from './pages/AddExpense'
 
 function App() {
   const [user, setUser] = useState(
@@ -18,10 +19,11 @@ function App() {
       {/* <BackendTest/> */}
       <Navbar user={user} setUser={setUser}/>
       <Routes>
-        <Route path='/' element={<Home/>}/>
+        <Route path='/' element={<Home user={user}/>}/>
         <Route path='/register' element={<Register/>}/>
         <Route path='/login' element={<Login setUser={setUser}/>}/>
         <Route path='/expenses' element={<Expenses user={user}/>}/>
+        <Route path="/add" element={<AddExpense user={user}/>} />
 
       </Routes>
     </>
