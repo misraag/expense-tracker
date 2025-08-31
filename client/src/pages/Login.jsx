@@ -23,7 +23,7 @@ function Login({ setUser }) {
       localStorage.setItem("user", JSON.stringify(res.data.user));
       setUser(res.data.user);
 
-      navigate("/expenses");
+      navigate("/dashboard");
     } catch (err) {
       setMsg(err.response.data.msg);
     }

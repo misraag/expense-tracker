@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, Navigate } from 'react-router-dom'
 import './App.css'
 import BackendTest from './components/BackendTest'
 import Navbar from './components/Navbar'
@@ -8,6 +8,7 @@ import Register from './pages/Register'
 import Login from './pages/Login'
 import Expenses from './pages/Expenses'
 import AddExpense from './pages/AddExpense'
+import Dashboard from './pages/Dashboard'
 
 function App() {
   const [user, setUser] = useState(
@@ -24,6 +25,7 @@ function App() {
         <Route path='/login' element={<Login setUser={setUser}/>}/>
         <Route path='/expenses' element={<Expenses user={user}/>}/>
         <Route path="/add" element={<AddExpense user={user}/>} />
+        <Route path="/dashboard" element={user ? <Dashboard user={user} /> : <Navigate to="/login" />} />
 
       </Routes>
     </>
