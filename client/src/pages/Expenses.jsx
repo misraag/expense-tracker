@@ -22,6 +22,11 @@ function Expenses() {
     description: "",
     amount: "",
   });
+  let [summary, setSummary] = useState({
+    total: 0,
+    thisMonth: 0,
+    topCategory: "",
+  });
 
   useEffect(() => {
     fetchExpenses();
@@ -33,7 +38,10 @@ function Expenses() {
       .get("http://localhost:5000/api/expenses", {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((res) => setExpenses(res.data))
+      .then((res) => {
+        setExpenses(res.data);
+        calculateSummary(res.data);
+      })
       .catch((err) => console.log(err.response?.data || err.message));
   };
 
@@ -44,7 +52,9 @@ function Expenses() {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(() => {
-        setExpenses(expenses.filter((exp) => exp._id !== id));
+        const updated = expenses.filter((exp) => exp._id !== id);
+        setExpenses(updated);
+        calculateSummary(updated);
       })
       .catch((err) => console.log(err.response?.data || err.message));
   };
@@ -67,14 +77,40 @@ function Expenses() {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((res) => {
-        setExpenses(expenses.map((exp) => (exp._id === id ? res.data : exp)));
+        const updated = expenses.map((exp) =>
+          exp._id === id ? res.data : exp
+        );
+        setExpenses(updated);
+        calculateSummary(updated);
         setEditingId(null);
       })
       .catch((err) => console.log(err.response?.data || err.message));
   };
 
-  // total expenses
-  const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+  // calculate summary cards
+  const calculateSummary = (data) => {
+    let total = data.reduce((sum, e) => sum + e.amount, 0);
+
+    let currentMonth = new Date().getMonth();
+    let thisMonth = data
+      .filter((e) => new Date(e.date).getMonth() === currentMonth)
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    let categoryTotals = {};
+    data.forEach((e) => {
+      categoryTotals[e.category] =
+        (categoryTotals[e.category] || 0) + e.amount;
+    });
+
+    let topCategory =
+      Object.keys(categoryTotals).length > 0
+        ? Object.keys(categoryTotals).reduce((a, b) =>
+            categoryTotals[a] > categoryTotals[b] ? a : b
+          )
+        : "N/A";
+
+    setSummary({ total, thisMonth, topCategory });
+  };
 
   // group expenses by date
   const groupedExpenses = expenses.reduce((acc, exp) => {
@@ -87,7 +123,8 @@ function Expenses() {
   // prepare data for PieChart (category wise total)
   const categoryData = Object.values(
     expenses.reduce((acc, exp) => {
-      if (!acc[exp.category]) acc[exp.category] = { name: exp.category, value: 0 };
+      if (!acc[exp.category])
+        acc[exp.category] = { name: exp.category, value: 0 };
       acc[exp.category].value += exp.amount;
       return acc;
     }, {})
@@ -96,7 +133,10 @@ function Expenses() {
   // prepare data for BarChart (date wise total)
   const dateData = Object.keys(groupedExpenses).map((date) => ({
     date,
-    total: groupedExpenses[date].reduce((sum, exp) => sum + exp.amount, 0),
+    total: groupedExpenses[date].reduce(
+      (sum, exp) => sum + exp.amount,
+      0
+    ),
   }));
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#9b59b6"];
@@ -124,7 +164,10 @@ function Expenses() {
                         placeholder="Category"
                         value={formData.category}
                         onChange={(e) =>
-                          setFormData({ ...formData, category: e.target.value })
+                          setFormData({
+                            ...formData,
+                            category: e.target.value,
+                          })
                         }
                       />
                       <input
@@ -133,7 +176,10 @@ function Expenses() {
                         placeholder="Description"
                         value={formData.description}
                         onChange={(e) =>
-                          setFormData({ ...formData, description: e.target.value })
+                          setFormData({
+                            ...formData,
+                            description: e.target.value,
+                          })
                         }
                       />
                       <input
@@ -142,7 +188,10 @@ function Expenses() {
                         placeholder="Amount"
                         value={formData.amount}
                         onChange={(e) =>
-                          setFormData({ ...formData, amount: e.target.value })
+                          setFormData({
+                            ...formData,
+                            amount: e.target.value,
+                          })
                         }
                       />
                       <button
@@ -194,10 +243,33 @@ function Expenses() {
         <p>No expense added</p>
       )}
 
-      {/* Total */}
+      {/* Summary Cards */}
       {expenses.length > 0 && (
-        <div className="alert alert-primary mt-3 text-end">
-          <strong>Total: ₹{total}</strong>
+        <div className="row text-center my-4">
+          <div className="col-md-4">
+            <div className="card shadow-sm">
+              <div className="card-body">
+                <h6>Total Expenses</h6>
+                <h4 className="fw-bold">₹{summary.total}</h4>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-4">
+            <div className="card shadow-sm">
+              <div className="card-body">
+                <h6>This Month</h6>
+                <h4 className="fw-bold">₹{summary.thisMonth}</h4>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-4">
+            <div className="card shadow-sm">
+              <div className="card-body">
+                <h6>Top Category</h6>
+                <h4 className="fw-bold">{summary.topCategory}</h4>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -221,7 +293,10 @@ function Expenses() {
                     label
                   >
                     {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
                     ))}
                   </Pie>
                   <Tooltip />
